@@ -1,55 +1,116 @@
-class Producto{
-    static contadorProducto = 0
+const fs = require('fs');
 
-    constructor(title, description, price, thumbnail, code, stock){
-        this.title = title
-        this.description = description
-        this.price = price
-        this.thumbnail = thumbnail
-        this.code = code
-        this.stock = stock
-        this.id = ++Producto.contadorProducto
-    }
-}
-
-class ProductManager{
-    constructor(){
-        this.productos = []
+class ProductManager {
+    constructor(filePath = './productos.json') {
+        this.path = filePath;
+        this.productos = [];
+        this.loadProducts();
     }
 
-    getProducts(){
+    loadProducts() {
+        try {
+            const data = fs.readFileSync(this.path, 'utf-8');
+            this.productos = JSON.parse(data);
+        } catch (error) {
+            this.productos = [];
+        }
+    }
+
+    saveProducts() {
+        const data = JSON.stringify(this.productos, null, 2);
+        fs.writeFileSync(this.path, data, 'utf-8');
+    }
+
+    getProducts() {
+        this.loadProducts();
         return this.productos;
     }
 
-    getProductsById(identificador){
-        for (const productoAux of this.productos) {
-            if(productoAux.id == identificador){
-                return productoAux
-            }
-        }
-        return "Not found"
+    getProductById(identificador) {
+        this.loadProducts();
+        const producto = this.productos.find(productoAux => productoAux.id == identificador);
+        return producto ? producto : "Not found";
     }
 
-    addProduct(title, description, price, thumbnail, code, stock){
-        let existeProducto = false
-        this.productos.forEach(productoAux => {
-            if(productoAux.code == code){
-                existeProducto = true
-            }
-        });
-        if(!existeProducto){
-            let productoAux = new Producto(title, description, price, thumbnail, code, stock)
-            this.productos.push(productoAux)
+    addProduct(productoData) {
+        this.loadProducts();
+
+        const existeProducto = this.productos.some(productoAux => productoAux.code == productoData.code);
+
+        if (!existeProducto) {
+            const nuevoProducto = {
+                id: this.productos.length + 1,
+                ...productoData
+            };
+
+            this.productos.push(nuevoProducto);
+            this.saveProducts();
         } else {
-            console.log("Error: Ya existe un producto con ese codigo (code)")
+            console.log("Error: Ya existe un producto con ese código (code)");
+        }
+    }
+
+    updateProduct(id, updatedProduct) {
+        this.loadProducts();
+
+        const index = this.productos.findIndex(productoAux => productoAux.id == id);
+
+        if (index !== -1) {
+            this.productos[index] = {
+                ...this.productos[index],
+                ...updatedProduct,
+                id: id // No se debe borrar el ID
+            };
+
+            this.saveProducts();
+        } else {
+            console.log("Error: Producto no encontrado");
+        }
+    }
+
+    deleteProduct(id) {
+        this.loadProducts();
+
+        const index = this.productos.findIndex(productoAux => productoAux.id == id);
+
+        if (index !== -1) {
+            this.productos.splice(index, 1);
+            this.saveProducts();
+        } else {
+            console.log("Error: Producto no encontrado");
         }
     }
 }
 
-//const productManager = new ProductManager()
-//console.log(productManager.getProducts())
-//productManager.addProduct("Producto prueba", "Este es un producto prueba", 2000, "Sin imagen", "abc123", 25)
-//console.log(productManager.getProducts())
-//productManager.addProduct("Producto prueba", "Este es un producto prueba", 2000, "Sin imagen", "abc123", 25)
-//console.log(productManager.getProductsById(1))
-//console.log(productManager.getProductsById(2))
+// Código de prueba
+//const productManager = new ProductManager();
+//console.log(productManager.getProducts());
+
+//const nuevoProducto = {
+//    title: 'producto prueba',
+//    description: 'Este es un producto prueba',
+//    price: 200,
+//    thumbnail: 'Sin imagen',
+//    code: 'abc123',
+//    stock: 25
+//};
+
+//productManager.addProduct(nuevoProducto);
+
+//console.log(productManager.getProducts());
+
+//const idProducto = 1;
+//console.log(productManager.getProductById(idProducto));
+
+//const productoActualizado = {
+//    description: 'Producto actualizado con éxito',
+//    price: 250
+//};
+
+//productManager.updateProduct(idProducto, productoActualizado);
+
+//console.log(productManager.getProducts());
+
+//productManager.deleteProduct(idProducto);
+
+//console.log(productManager.getProducts());
