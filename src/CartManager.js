@@ -4,7 +4,16 @@ class CartManager {
     constructor(filePath = './carrito.json') {
         this.path = filePath;
         this.carts = [];
-        this.loadCarts();
+        this.io = null;
+        this.initialize();
+    }
+
+    setSocketIO(io) {
+        this.io = io;
+    }
+
+    async initialize() {
+        await this.loadCarts();
     }
 
     async loadCarts() {
@@ -31,12 +40,21 @@ class CartManager {
 
         this.carts.push(newCart);
         await this.saveCarts();
+
+        if (this.io) {
+            this.io.emit('actualizarCarritos', await this.getCarts());
+        }
     }
 
     async getCart(cartId) {
         await this.loadCarts();
         const cart = this.carts.find(cart => cart.id === cartId);
         return cart || "Not found";
+    }
+
+    async getCarts() {
+        await this.loadCarts();
+        return this.carts;
     }
 
     async addProductToCart(cartId, productId, quantity) {
@@ -55,6 +73,10 @@ class CartManager {
         }
 
         await this.saveCarts();
+
+        if (this.io) {
+            this.io.emit('actualizarCarritos', await this.getCarts());
+        }
     }
 }
 

@@ -4,7 +4,6 @@ const ProductManager = require('../ProductManager');
 const router = express.Router();
 const productManager = new ProductManager();
 
-// Obtener todos los productos
 router.get('/', async (req, res) => {
     try {
         const limit = req.query.limit;
@@ -15,7 +14,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Obtener un producto por su ID
 router.get('/:pid', async (req, res) => {
     try {
         const productId = req.params.pid;
@@ -30,7 +28,6 @@ router.get('/:pid', async (req, res) => {
     }
 });
 
-// Agregar un nuevo producto
 router.post('/', async (req, res) => {
     try {
         const newProduct = req.body;
@@ -41,7 +38,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Actualizar un producto por su ID
 router.put('/:pid', async (req, res) => {
     try {
         const productId = req.params.pid;
@@ -53,7 +49,6 @@ router.put('/:pid', async (req, res) => {
     }
 });
 
-// Eliminar un producto por su ID
 router.delete('/:pid', async (req, res) => {
     try {
         const productId = req.params.pid;
@@ -64,4 +59,7 @@ router.delete('/:pid', async (req, res) => {
     }
 });
 
-module.exports = router;
+module.exports = (io) => {
+    productManager.setSocketIO(io);
+    return router;
+};

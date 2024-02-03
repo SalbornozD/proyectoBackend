@@ -1,10 +1,21 @@
+// ProductManager.js
 const fs = require('fs').promises;
 
 class ProductManager {
     constructor(filePath = './productos.json') {
         this.path = filePath;
         this.productos = [];
-        this.loadProducts();
+        this.io = null;
+        this.initialize();
+    }
+
+    setSocketIO(io) {
+        this.io = io;
+    }
+
+    async initialize() {
+        await this.loadProducts();
+        
     }
 
     async loadProducts() {
@@ -45,6 +56,11 @@ class ProductManager {
 
             this.productos.push(nuevoProducto);
             await this.saveProducts();
+
+            
+            if (this.io) {
+                this.io.emit('actualizarProductos', await this.getProducts());
+            }
         } else {
             throw new Error("Error: Ya existe un producto con ese código (code)");
         }
@@ -59,10 +75,15 @@ class ProductManager {
             this.productos[index] = {
                 ...this.productos[index],
                 ...updatedProduct,
-                id: id // No se debe borrar el ID
+                id: id
             };
 
             await this.saveProducts();
+
+        
+            if (this.io) {
+                this.io.emit('actualizarProductos', await this.getProducts());
+            }
         } else {
             throw new Error("Error: Producto no encontrado");
         }
@@ -76,6 +97,11 @@ class ProductManager {
         if (index !== -1) {
             this.productos.splice(index, 1);
             await this.saveProducts();
+
+           
+            if (this.io) {
+                this.io.emit('actualizarProductos', await this.getProducts());
+            }
         } else {
             throw new Error("Error: Producto no encontrado");
         }
